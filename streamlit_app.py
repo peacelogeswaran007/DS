@@ -2,47 +2,43 @@ import streamlit as st
 import numpy as np
 import joblib
 
-# Load the trained model (ensure this matches your saved joblib file name)
-model = joblib.load("best_model.joblib")
+# Load the trained model
+model = joblib.load('best_model.joblib')
 
-# Page title
+# Streamlit app UI
 st.title("🏠 House Price Prediction App")
-st.write("Enter the features below to predict house price.")
+
+st.markdown("Enter the house features below to get a predicted sale price.")
 
 # Input fields
-features = {}
+first_flr_sf = st.number_input("1st Floor Area (sq ft)", min_value=0)
+second_flr_sf = st.number_input("2nd Floor Area (sq ft)", min_value=0)
+total_bsmt_sf = st.number_input("Total Basement Area (sq ft)", min_value=0)
+gr_liv_area = st.number_input("Above Ground Living Area (sq ft)", min_value=0)
+garage_area = st.number_input("Garage Area (sq ft)", min_value=0)
+lot_area = st.number_input("Lot Area (sq ft)", min_value=0)
 
-features['1stFlrSF'] = st.number_input("1st Floor SF", min_value=0.0)
-features['2ndFlrSF'] = st.number_input("2nd Floor SF", min_value=0.0)
-features['TotalBsmtSF'] = st.number_input("Total Basement SF", min_value=0.0)
-features['GrLivArea'] = st.number_input("Ground Living Area", min_value=0.0)
-features['GarageArea'] = st.number_input("Garage Area", min_value=0.0)
-features['LotArea'] = st.number_input("Lot Area", min_value=0.0)
-features['OverallQual'] = st.slider("Overall Quality (1-10)", 1, 10, 5)
-features['FullBath'] = st.slider("Full Bathrooms", 0, 4, 1)
-features['BedroomAbvGr'] = st.slider("Bedrooms Above Ground", 0, 10, 3)
-features['YearBuilt'] = st.number_input("Year Built", min_value=1800, max_value=2025, value=2000)
-features['YearRemodAdd'] = st.number_input("Year Remodeled", min_value=1800, max_value=2025, value=2000)
-features['MoSold'] = st.slider("Month Sold", 1, 12, 6)
-features['YrSold'] = st.number_input("Year Sold", min_value=2006, max_value=2025, value=2010)
+overall_qual = st.slider("Overall Quality (1-10)", 1, 10, 5)
+full_bath = st.slider("Number of Full Bathrooms", 0, 4, 1)
+bedrooms = st.slider("Number of Bedrooms Above Ground", 0, 10, 3)
 
-# Convert inputs to numpy array
-input_array = np.array([list(features.values())])
+year_built = st.number_input("Year Built", min_value=1800, max_value=2025, value=2000)
+year_remod = st.number_input("Year Remodeled", min_value=1800, max_value=2025, value=2000)
+mo_sold = st.slider("Month Sold", 1, 12, 6)
+yr_sold = st.number_input("Year Sold", min_value=2006, max_value=2025, value=2010)
 
-# Predict
+# Prediction
 if st.button("Predict"):
-    if np.all(input_array == 0):
-        st.warning("⚠️ Please enter meaningful (non-zero) values for prediction.")
-    else:
-        try:
-            # Predict and apply inverse transformation if necessary
-            prediction = model.predict(input_array)[0]
+    try:
+        input_features = np.array([
+            first_flr_sf, second_flr_sf, total_bsmt_sf, gr_liv_area, garage_area,
+            lot_area, overall_qual, full_bath, bedrooms,
+            year_built, year_remod, mo_sold, yr_sold
+        ]).reshape(1, -1)
 
-            # If model was trained on log prices, apply exp
-            if prediction < 0:
-                st.error("❌ Predicted price is negative. Please check your inputs or model.")
-            else:
-                predicted_price = np.expm1(prediction) if prediction < 1000 else prediction
-                st.success(f"🏡 Predicted House Price: ${predicted_price:,.2f}")
-        except Exception as e:
-            st.error(f"⚠️ Prediction failed: {e}")
+        prediction = model.predict(input_features)[0]
+
+        st.success(f"🏡 Estimated House Price: ${prediction:,.2f}")
+
+    except Exception as e:
+        st.error(f"❌ Prediction failed: {e}")
