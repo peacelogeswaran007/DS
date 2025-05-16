@@ -1,18 +1,12 @@
 import streamlit as st
 import joblib
-import numpy as np
 import pandas as pd
+import numpy as np
 
 # Load the trained model
 model = joblib.load("best_model.pkl")
 
-# Page title
-st.set_page_config(page_title="🏡 House Price Predictor")
-st.title("🏡 House Price Predictor")
-
-st.write("Fill in the details below to predict the house price:")
-
-# Define all features your model expects
+# Define the feature list in the exact order the model was trained on
 features = [
     '1stFlrSF', '2ndFlrSF', '3SsnPorch', 'BedroomAbvGr', 'BsmtFinSF1',
     'BsmtFinSF2', 'BsmtFullBath', 'BsmtHalfBath', 'BsmtUnfSF', 'EnclosedPorch',
@@ -24,24 +18,25 @@ features = [
     'YrSold'
 ]
 
-# Create input fields for each feature
-input_data = {}
-for feature in features:
-    if feature in ['Id', 'MSSubClass', 'YrSold', 'MoSold', 'OverallQual', 'OverallCond', 'KitchenAbvGr', 'TotRmsAbvGrd', 'BedroomAbvGr',
-                   'Fireplaces', 'FullBath', 'HalfBath', 'BsmtFullBath', 'BsmtHalfBath', 'GarageCars']:
-        input_data[feature] = st.number_input(feature, step=1)
-    else:
-        input_data[feature] = st.number_input(feature)
+st.set_page_config(page_title="🏡 House Price Predictor")
+st.title("🏡 House Price Predictor")
 
-# Prediction
+st.write("Enter house details to estimate its price:")
+
+# Create input fields
+input_data = []
+for feature in features:
+    val = st.number_input(f"{feature}", step=1)
+    input_data.append(val)
+
+# When user clicks "Predict Price"
 if st.button("Predict Price"):
     try:
-        # Create DataFrame with single row in same order as features
-        input_df = pd.DataFrame([input_data[f] for f in features]).T
-        input_df.columns = features
+        # Convert input into DataFrame with correct column names
+        input_df = pd.DataFrame([input_data], columns=features)
 
-        # Predict
+        # Predict the price
         prediction = model.predict(input_df)[0]
-        st.success(f"🏠 Estimated House Price: ${prediction:,.2f}")
+        st.success(f"🏠 Predicted House Price: ${prediction:,.2f}")
     except Exception as e:
         st.error(f"Error making prediction: {str(e)}")
