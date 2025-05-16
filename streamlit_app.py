@@ -1,47 +1,46 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
 import joblib
 
-# Load trained model
-model = joblib.load('best_model.pkl')
+# Title of the app
+st.title("🏡 House Price Predictor")
 
-st.set_page_config(page_title="House Price Predictor", layout="centered")
+# Load the trained model and the feature list
+model = joblib.load("best_model.pkl")
+feature_names = joblib.load("features.pkl")  # list of features used in training
 
-st.title("🏠 House Price Prediction App")
-st.markdown("Enter property details to predict its **Sale Price**.")
+# User input interface (minimal important features)
+st.header("Enter Property Details")
 
-# Example input fields (adjust based on your dataset)
-# Here we assume numerical features only (like LotArea, YearBuilt, OverallQual, GrLivArea, etc.)
-# You MUST match these with the features your model was trained on
+lot_area = st.number_input("Lot Area (sq ft)", min_value=1000, max_value=200000, value=8000)
+year_built = st.slider("Year Built", min_value=1900, max_value=2025, value=2000)
+gr_liv_area = st.number_input("Above Ground Living Area (sq ft)", value=1800)
+full_bath = st.slider("Number of Full Bathrooms", 0, 4, 2)
+garage_cars = st.slider("Garage Capacity (Cars)", 0, 4, 2)
+overall_qual = st.slider("Overall Quality (1-10)", 1, 10, 5)
 
-def get_user_input():
-    LotArea = st.number_input("Lot Area (sq ft)", min_value=1000, max_value=100000, value=8000)
-    YearBuilt = st.number_input("Year Built", min_value=1800, max_value=2025, value=2005)
-    OverallQual = st.slider("Overall Quality (1–10)", 1, 10, 5)
-    GrLivArea = st.number_input("Above ground living area (sq ft)", min_value=300, max_value=5000, value=1500)
-    GarageCars = st.slider("Garage Cars", 0, 4, 2)
-    TotalBsmtSF = st.number_input("Total Basement Area (sq ft)", min_value=0, max_value=4000, value=800)
-    FullBath = st.slider("Full Bathrooms", 0, 4, 2)
+# Create a dictionary with the inputs
+input_data = {
+    'LotArea': lot_area,
+    'YearBuilt': year_built,
+    'GrLivArea': gr_liv_area,
+    'FullBath': full_bath,
+    'GarageCars': garage_cars,
+    'OverallQual': overall_qual,
+}
 
-    data = {
-        "LotArea": LotArea,
-        "YearBuilt": YearBuilt,
-        "OverallQual": OverallQual,
-        "GrLivArea": GrLivArea,
-        "GarageCars": GarageCars,
-        "TotalBsmtSF": TotalBsmtSF,
-        "FullBath": FullBath
-    }
+# Fill in missing features with 0
+for feature in feature_names:
+    if feature not in input_data:
+        input_data[feature] = 0
 
-    return pd.DataFrame([data])
+# Convert to DataFrame and reorder columns to match training data
+input_df = pd.DataFrame([input_data])[feature_names]
 
-input_df = get_user_input()
-
-# Predict and show result
+# Make prediction
 if st.button("Predict Price"):
     try:
-        prediction = model.predict(input_df)
-        st.success(f"💰 Predicted House Price: **${prediction[0]:,.2f}**")
+        prediction = model.predict(input_df)[0]
+        st.success(f"🏠 Estimated House Price: ${prediction:,.0f}")
     except Exception as e:
-        st.error(f"⚠️ Error making prediction: {e}")
+        st.error(f"❌ Error during prediction: {e}")
