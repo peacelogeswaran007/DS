@@ -21,4 +21,4 @@ model = RandomForestRegressor(random_state=42)
 model.fit(X, y)
 
 # Save the model
-joblib.dump(model, 'train_model.joblib')
+joblib.dump(model, 'best_model.joblib')
