@@ -3,7 +3,7 @@ import numpy as np
 import joblib
 
 # Load the trained model
-model = joblib.load('best_model.joblib')
+model = joblib.load('house_model.joblib')
 
 # Streamlit app UI
 st.title("🏠 House Price Prediction App")
